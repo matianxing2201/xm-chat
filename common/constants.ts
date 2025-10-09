@@ -3,6 +3,11 @@ export enum IPC_EVENTS {
   MINIMIZE_WINDOW = "minimize-window",
   MAXIMIZE_WINDOW = "maximize-window",
   IS_WINDOW_MAXIMIZED = "is-window-maximized",
+
+  LOG_DEBUG = "log-debug",
+  LOG_INFO = "log-info",
+  LOG_WARN = "log-warn",
+  LOG_ERROR = "log-error",
 }
 
 export enum WINDOW_NAMES {
