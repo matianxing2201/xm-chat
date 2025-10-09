@@ -23,8 +23,6 @@ class LogService {
   private constructor() {
     const logPath = path.join(app.getPath("userData"), "logs");
 
-    console.log("logPath:", logPath);
-
     // 递归创建日志目录
     try {
       if (!fs.existsSync(logPath)) {
@@ -65,6 +63,9 @@ class LogService {
     this.info("LogService 初始化成功✅.");
 
     this._cleanupOldLogs();
+
+    // 定时清理旧日志
+    setInterval(() => this._cleanupOldLogs(), this.CLEANUP_INTERVAL_MS);
   }
 
   private _setupIpcEvents() {
