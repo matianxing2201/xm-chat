@@ -2,13 +2,25 @@
 import { NConfigProvider } from 'naive-ui';
 import TitleBar from '@renderer/components/TitleBar.vue';
 import DragRegion from '@renderer/components/DragRegion.vue';
+import NavBar from '@renderer/components/Navbar.vue';
 
+
+const sidebarWidth = ref(320);
+
+onMounted(() => {
+  console.log('App mounted');
+});
 
 </script>
 <template>
   <n-config-provider class="h-[100vh] w-[100vw] flex">
-    <aside class=" h-full flex flex-shrink-0 flex-col bg-amber-600 w-[200px]">
-      Aside
+    <aside class="sidebar h-full flex flex-shrink-0 flex-col" :style="{ width: sidebarWidth + 'px' }">
+      <div class="flex-auto flex">
+        <nav-bar />
+        <div class="flex-auto">
+          conversation-list
+        </div>
+      </div>
     </aside>
     <div class="flex-auto">
       <title-bar>
@@ -18,3 +30,10 @@ import DragRegion from '@renderer/components/DragRegion.vue';
     </div>
   </n-config-provider>
 </template>
+
+<style>
+.sidebar {
+  background-color: var(--bg-color);
+  box-shadow: -3px -2px 10px rgba(101, 101, 101, 0.2);
+}
+</style>
