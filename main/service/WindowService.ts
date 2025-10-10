@@ -10,6 +10,9 @@ import {
 } from "electron";
 import { debounce } from "@common/utils";
 
+import logManager from "./LogService";
+import themeManage from "./ThemeService";
+
 import path from "node:path";
 
 interface SizeOptions {
@@ -25,6 +28,8 @@ const SHARED_WINDOW_OPTIONS = {
   titleBarStyle: "hidden",
   frame: false,
   title: "XM-Chat",
+  darkTheme: themeManage.isDark,
+  backgroundColor: themeManage.isDark ? "#2C2C2C" : "#ffffff",
   trafficLightPosition: { x: -15, y: -15 }, // 调整三个按钮位置（可选）
   webPreferences: {
     nodeIntegration: false, // 禁用 Node.js 集成，提高安全性
@@ -45,6 +50,7 @@ class WindowService {
    */
   private constructor() {
     this._setupIpcEvents();
+    logManager.info("windowsService 初始化成功");
   }
 
   /**
@@ -75,7 +81,7 @@ class WindowService {
   /**
    * 获取WindowService单例实例
    * 使用懒加载模式，只有在首次调用时才创建实例
-   * 
+   *
    * @returns WindowService的单例实例
    */
   public static getInstance(): WindowService {
@@ -88,7 +94,7 @@ class WindowService {
   /**
    * 创建新窗口的核心方法
    * 根据提供的窗口名称和尺寸配置创建一个新的浏览器窗口
-   * 
+   *
    * @param name - 窗口名称，用于标识窗口类型
    * @param size - 窗口尺寸配置对象，包含宽度、高度等属性
    * @returns 创建的BrowserWindow实例
@@ -108,7 +114,7 @@ class WindowService {
   /**
    * 设置窗口生命周期事件监听器
    * 监听窗口的关闭、调整大小等事件，处理相应逻辑
-   * 
+   *
    * @param window - 要设置生命周期的窗口实例
    * @param _name - 窗口名称
    * @returns 当前WindowService实例，支持链式调用
@@ -127,8 +133,7 @@ class WindowService {
     window.once("closed", () => {
       window?.destroy();
       window?.removeListener("resize", updateWinStatus);
-      // this._winStates[name].instance = void 0;
-      // logManager.info(`Window closed: ${name}`);
+      logManager.info(`窗口: ${name} 关闭`);
     });
     // 监听窗口调整大小事件
     window.on("resize", updateWinStatus);
@@ -140,7 +145,7 @@ class WindowService {
    * 加载窗口模板内容
    * 根据运行环境（开发/生产）加载相应的页面内容
    * 开发环境下从开发服务器加载，生产环境下从本地文件加载
-   * 
+   *
    * @param window - 要加载内容的窗口实例
    * @param name - 窗口名称，决定加载哪个HTML文件
    */
@@ -162,7 +167,7 @@ class WindowService {
   /**
    * 关闭指定窗口
    * 安全地关闭窗口，会先检查窗口是否存在
-   * 
+   *
    * @param target - 要关闭的窗口实例
    */
   public close(target: BrowserWindow | void | null) {
@@ -173,7 +178,7 @@ class WindowService {
   /**
    * 切换窗口最大化状态
    * 如果窗口已最大化则取消最大化，否则最大化窗口
-   * 
+   *
    * @param target - 要切换最大化的窗口实例
    */
   public toggleMax(target: BrowserWindow | void | null) {
