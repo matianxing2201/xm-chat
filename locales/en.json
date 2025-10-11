@@ -5,5 +5,51 @@
     "restore": "Restore",
     "close": "Close"
   },
-  "main": {}
+  "main": {
+    "welcome": {
+      "helloMessage": "Hello, I'm Noelle"
+    },
+    "conversation": {
+      "placeholder": "Type a message...",
+      "newConversation": "New Conversation",
+      "selectModel": "Please select model",
+      "createConversation": "Create Conversation",
+      "searchPlaceholder": "Search conversations...",
+      "goSettings": "Go to",
+      "settings": "Settings Window",
+      "addModel": "to add a model",
+      "dialog": {
+        "title": "Confirm Deletion",
+        "content": "Are you sure you want to delete this conversation?",
+        "content_1": "Are you sure you want to delete the selected conversations? This action cannot be undone."
+      },
+      "operations": {
+        "pin": "Pin Selected",
+        "del": "Delete Selected",
+        "selectAll": "Select All",
+        "cancel": "Cancel"
+      }
+    },
+    "sidebar": {
+      "conversations": "Conversations",
+      "settings": "Settings",
+      "help": "Help"
+    },
+    "message": {
+      "dialog": {
+        "title": "Confirm Deletion",
+        "messageDelete": "Are you sure you want to delete this message?",
+        "batchDelete": "Are you sure you want to delete the selected messages?",
+        "copySuccess": "Copied successfully"
+      },
+      "batchActions": {
+        "deleteSelected": "Delete Selected"
+      },
+      "rendering": "Thinking...",
+      "stoppedGeneration": "(Stopped generating)",
+      "sending": "Sending",
+      "stopGeneration": "Stop generating",
+      "send": "Send"
+    }
+  }
 }

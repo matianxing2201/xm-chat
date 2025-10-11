@@ -28,3 +28,14 @@ export const MAIN_WIN_SIZE = {
   minWidth: 1024,
   minHeight: 800,
 } as const;
+
+export interface Conversation {
+  id: number;
+  title: string;
+  selectedModel: string;
+  createdAt: number;
+  updatedAt: number;
+  providerId: number;
+  pinned: boolean;
+  type?: "divider" | "conversation";
+}

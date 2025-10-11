@@ -48,7 +48,6 @@ function stopDrag() {
 // 拖拽中
 function handleDrag(e: MouseEvent) {
     if (!isDragging) return;
-    debugger
 
     const diffX = props.valIsNagetive ? startPoint.x - e.clientX : e.clientX - startPoint.x;
     const diffY = props.valIsNagetive ? startPoint.y - e.clientY : e.clientY - startPoint.y;

@@ -28,4 +28,8 @@ defineOptions({ name: 'NavBar' });
     </drag-region>
 </template>
 
-<style scoped lang='scss'></style>
+<style scoped>
+li {
+    margin-top: 10px;
+}
+</style>
