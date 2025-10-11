@@ -3,6 +3,7 @@ import { NConfigProvider } from 'naive-ui';
 import TitleBar from '@renderer/components/TitleBar.vue';
 import DragRegion from '@renderer/components/DragRegion.vue';
 import NavBar from '@renderer/components/Navbar.vue';
+import ResizeDivider from './components/ResizeDivider.vue';
 
 
 const sidebarWidth = ref(320);
@@ -22,6 +23,7 @@ onMounted(() => {
         </div>
       </div>
     </aside>
+    <resize-divider direction="vertical" v-model:size="sidebarWidth" :max-size="800" :min-size="320" />
     <div class="flex-auto">
       <title-bar>
         <drag-region class="w-full" />
