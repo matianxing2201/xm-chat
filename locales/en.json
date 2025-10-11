@@ -1,5 +1,9 @@
 {
-  "main": {
-
-  }
+  "window": {
+    "minimize": "Minimize",
+    "maximize": "Maximize",
+    "restore": "Restore",
+    "close": "Close"
+  },
+  "main": {}
 }
