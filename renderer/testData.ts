@@ -137,7 +137,8 @@ export const conversations: Conversation[] = [
   {
     id: 2,
     selectedModel: "qwen-plus",
-    title: "人工智能发展趋势与应用",
+    title:
+      "人工智能发展趋势与应用, 人工智能发展趋势与应用, 人工智能发展趋势与应用",
     createdAt: randomDate(startDate, endDate),
     updatedAt: randomDate(startDate, endDate),
     providerId: 2,

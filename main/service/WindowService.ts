@@ -107,7 +107,7 @@ class WindowService {
 
     // 设置窗口生命周期事件并加载窗口模板
     this._setupWinLifecycle(window, name)._loadWindowTemplate(window, name);
-    window.webContents.openDevTools();
+    // window.webContents.openDevTools();
     return window;
   }
 

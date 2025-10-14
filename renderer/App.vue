@@ -14,13 +14,11 @@ onMounted(() => {
 
 </script>
 <template>
-  <n-config-provider class="h-[100vh] w-[100vw] flex">
+  <n-config-provider class="h-full w-[100vw] flex text-tx-primary">
     <aside class="sidebar h-full flex flex-shrink-0 flex-col" :style="{ width: sidebarWidth + 'px' }">
       <div class="flex-auto flex">
         <nav-bar />
-        <div class="flex-auto">
-          <conversation-list class="flex-auto" />
-        </div>
+        <conversation-list class="flex-auto" :width="sidebarWidth" />
       </div>
     </aside>
     <resize-divider direction="vertical" v-model:size="sidebarWidth" :max-size="800" :min-size="320" />
