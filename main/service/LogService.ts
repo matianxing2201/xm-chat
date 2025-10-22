@@ -170,6 +170,20 @@ class LogService {
   public error(message: string, ...meta: any[]): void {
     log.error(message, ...meta);
   }
+
+  /**
+   * 获取日志文件路径
+   * @returns {string} 日志文件路径
+   */
+  public logUserOperation(
+    operation: string,
+    userId: string = "unknown",
+    details: any = {}
+  ): void {
+    this.info(
+      `用户操作: ${operation} by ${userId}, 详情: ${JSON.stringify(details)}`
+    );
+  }
 }
 
 export const logManager = LogService.getInstance();

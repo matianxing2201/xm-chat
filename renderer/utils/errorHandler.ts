@@ -12,6 +12,7 @@ export const errorHandler: Plugin = function (app) {
 
   window.onunhandledrejection = (event) => {
     logger.error("Unhandled Promise Rejection:", event);
+    console.log("Promise 对象:", event.reason);
   };
 };
 

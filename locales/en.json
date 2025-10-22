@@ -51,5 +51,93 @@
       "stopGeneration": "Stop generating",
       "send": "Send"
     }
+  },
+  "dialog": {
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "settings": {
+    "title": "Settings",
+    "base": "Basic Settings",
+    "provider": {
+      "modelConfig": "Model Configuration"
+    },
+    "theme": {
+      "label": "Theme Settings",
+      "dark": "Dark Theme",
+      "light": "Light Theme",
+      "system": "System Theme",
+      "primaryColor": "Primary Color"
+    },
+    "appearance": {
+      "fontSize": "Font Size",
+      "fontSizeOptions": {
+        "10": "Tiny (10px)",
+        "12": "Small (12px)",
+        "14": "Normal (14px)",
+        "16": "Medium (16px)",
+        "18": "Large (18px)",
+        "20": "Larger (20px)",
+        "24": "Extra Large (24px)"
+      }
+    },
+    "behavior": {
+      "minimizeToTray": "Minimize to tray when closed"
+    },
+    "language": {
+      "label": "Language"
+    },
+    "providers": {
+      "defaultModel": "Default Model",
+      "apiKey": "API Key",
+      "apiUrl": "API URL"
+    }
+  },
+  "menu": {
+    "conversation": {
+      "newConversation": "New Conversation",
+      "sortBy": "Sort By",
+      "sortByCreateTime": "Sort by Creation Time",
+      "sortByUpdateTime": "Sort by Update Time",
+      "sortByName": "Sort by Name",
+      "sortByModel": "Sort by Model",
+      "sortAscending": "Ascending",
+      "sortDescending": "Descending",
+      "pinConversation": "Pin Conversation",
+      "unpinConversation": "Unpin Conversation",
+      "renameConversation": "Rename Conversation",
+      "delConversation": "Delete Conversation",
+      "batchOperations": "Batch Operations"
+    },
+    "message": {
+      "copyMessage": "Copy Message",
+      "deleteMessage": "Delete Message",
+      "selectMessage": "Select Message"
+    }
+  },
+  "tray": {
+    "tooltip": "Noelle Application",
+    "showWindow": "Show Window",
+    "exit": "Exit"
+  },
+  "timeAgo": {
+    "justNow": "Just now",
+    "minutes": "{count} minutes ago",
+    "hours": "{count} hours ago",
+    "days": "{count} days ago",
+    "months": "{count} months ago",
+    "years": "{count} years ago",
+    "weekday": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday"
+    }
+  },
+  "app": {
+    "title": "Diona Application"
   }
 }

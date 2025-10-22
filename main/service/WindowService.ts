@@ -15,6 +15,13 @@ import themeManage from "./ThemeService";
 
 import path from "node:path";
 
+interface WindowState {
+  instance: BrowserWindow | void;
+  isHidden: boolean;
+  onCreate: ((window: BrowserWindow) => void)[];
+  onClosed: ((window: BrowserWindow) => void)[];
+}
+
 interface SizeOptions {
   width: number; // 窗口宽度
   height: number; // 窗口高度
@@ -42,6 +49,10 @@ const SHARED_WINDOW_OPTIONS = {
 
 class WindowService {
   private static _instance: WindowService;
+
+  private _winStates: Record<WindowNames | string, WindowState> = {
+    main: { instance: void 0, isHidden: false, onCreate: [], onClosed: [] },
+  };
 
   /**
    * WindowService构造函数
@@ -107,6 +118,9 @@ class WindowService {
 
     // 设置窗口生命周期事件并加载窗口模板
     this._setupWinLifecycle(window, name)._loadWindowTemplate(window, name);
+
+    // 触发窗口加载事件
+    this._winStates[name].onCreate.forEach((callback) => callback(window));
     // window.webContents.openDevTools();
     return window;
   }
@@ -184,6 +198,20 @@ class WindowService {
   public toggleMax(target: BrowserWindow | void | null) {
     if (!target) return;
     target.isMaximized() ? target.unmaximize() : target.maximize();
+  }
+
+  public onWindowCreate(
+    name: WindowNames,
+    callback: (window: BrowserWindow) => void
+  ) {
+    this._winStates[name].onCreate.push(callback);
+  }
+
+  public onWindowClosed(
+    name: WindowNames,
+    callback: (window: BrowserWindow) => void
+  ) {
+    this._winStates[name].onClosed.push(callback);
   }
 }
 

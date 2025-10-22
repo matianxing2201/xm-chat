@@ -39,11 +39,6 @@ export function throttle<T extends (...args: any[]) => any>(
   };
 }
 
-/**
- * 深拷贝
- * @param obj 需要拷贝的对象
- * @returns 拷贝后的对象
- */
 export function cloneDeep<T>(obj: T): T {
   if (obj === null || typeof obj !== "object") {
     return obj;
@@ -60,4 +55,13 @@ export function cloneDeep<T>(obj: T): T {
     }
   }
   return clone;
+}
+
+export function simpleCloneDeep<T>(obj: T): T {
+  try {
+    return JSON.parse(JSON.stringify(obj));
+  } catch (error) {
+    console.error("simpleCloneDeep failed:", error);
+    return obj;
+  }
 }

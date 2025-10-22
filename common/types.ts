@@ -1,5 +1,17 @@
 import { WINDOW_NAMES } from "./constants";
 
+export interface Provider {
+  id: number;
+  name: string;
+  visible?: boolean;
+  title?: string;
+  type?: "OpenAI";
+  openAISetting?: string;
+  createdAt: number;
+  updatedAt: number;
+  models: string[];
+}
+
 export type WindowNames = `${WINDOW_NAMES}`;
 
 export interface Conversation {
@@ -23,4 +35,9 @@ export interface Message {
   updatedAt?: number;
   status?: MessageStatus;
   conversationId: number;
+}
+
+export interface OpenAISetting {
+  baseURL?: string;
+  apiKey?: string;
 }
