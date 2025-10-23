@@ -68,6 +68,7 @@ dataBase.version(1).stores({
 
 export async function initProviders() {
   const count = await dataBase.providers.count();
+
   if (count === 0) {
     await dataBase.providers.bulkAdd(providers);
     logger.info("Providers data initialized successfully.");

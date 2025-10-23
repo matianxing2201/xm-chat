@@ -1,15 +1,21 @@
 <script setup lang="ts">
 import { NConfigProvider } from 'naive-ui';
-
+import { initProviders } from './dataBase';
+import { useProvidersStore } from './store/providers';
 import NavBar from '@renderer/components/Navbar.vue';
 import ResizeDivider from './components/ResizeDivider.vue';
 import ConversationList from '@renderer/components/ConversationList/index.vue';
 
 
 const sidebarWidth = ref(320);
+const providersStore = useProvidersStore();
 
-onMounted(() => {
+
+onMounted(async () => {
+  await initProviders();
+  await providersStore.initialize();
   console.log('App mounted');
+
 });
 
 </script>

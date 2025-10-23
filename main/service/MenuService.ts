@@ -90,6 +90,7 @@ class MenuService {
         label: t(item?.label) ?? void 0,
       };
     };
+
     const localizedTemplate = template.map((item) => {
       if (!Array.isArray(_dynamicOptions) || !_dynamicOptions.length) {
         return translationItem(item);
