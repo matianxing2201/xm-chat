@@ -121,7 +121,7 @@ class WindowService {
 
     // 触发窗口加载事件
     this._winStates[name].onCreate.forEach((callback) => callback(window));
-    // window.webContents.openDevTools();
+    window.webContents.openDevTools();
     return window;
   }
 

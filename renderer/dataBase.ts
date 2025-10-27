@@ -54,7 +54,7 @@ export const providers: Provider[] = [
   },
 ];
 
-export const dataBase = new Dexie("dionaDB") as Dexie & {
+export const dataBase = new Dexie("xmChatDB") as Dexie & {
   providers: EntityTable<Provider, "id">;
   conversations: EntityTable<Conversation, "id">;
   messages: EntityTable<Message, "id">;
