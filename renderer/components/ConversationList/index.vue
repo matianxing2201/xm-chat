@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { useFilter } from './useFilter';
 import { CTX_KEY } from './constants';
+import { Conversation } from '@common/types';
+import { CONVERSATION_ITEM_MENU_IDS, MENU_IDS } from '@common/constants';
 
 import { useContextMenu } from './useContextMenu';
 import { useConversationsStore } from '@renderer/store/conversations';
+import { createContextMenu } from '@renderer/utils/contextMenu';
 
 import SearchBar from './SearchBar.vue';
 import ListItem from './ListItem.vue';
-import { Conversation } from '@common/types';
-import { createContextMenu } from '@renderer/utils/contextMenu';
-import { CONVERSATION_ITEM_MENU_IDS, MENU_IDS } from '@common/constants';
+import OperationBar from './OperationBar.vue';
+
+
 
 const conversationItemActionPolicy = new Map([
     [CONVERSATION_ITEM_MENU_IDS.DEL, (item: Conversation) => {
@@ -27,11 +30,38 @@ const conversationItemActionPolicy = new Map([
     }],
 ])
 
+const batchActionPolicy = new Map([
+    [CONVERSATION_ITEM_MENU_IDS.DEL, async () => {
+        // todo
+    }],
+    [CONVERSATION_ITEM_MENU_IDS.PIN, async () => {
+        // 🔓与🔒
+        checkedIds.value.forEach(id => {
+            if (conversationsStore.allConversations.find(item => item.id === id)?.pinned) {
+                conversationsStore.unpinConversation(id);
+            } else {
+                conversationsStore.pinConversation(id);
+            }
+        })
+    }]
+])
+
 defineOptions({ name: 'ConversationList' });
 
 const props = defineProps<{ width: number }>();
 const editId = ref<number | void>();
 const checkedIds = ref<number[]>([])
+
+
+function handleAllSelectChange(checked: boolean) {
+    checkedIds.value = checked ? conversations.value.map(item => item.id) : [];
+}
+
+function handleBatchOperate(opId: CONVERSATION_ITEM_MENU_IDS) {
+    const action = batchActionPolicy.get(opId);
+    action && action();
+}
+
 
 provide(CTX_KEY, {
     width: computed(() => props.width),
@@ -42,7 +72,7 @@ provide(CTX_KEY, {
 
 
 const { conversations } = useFilter();
-const { handle: handleListContextMenu } = useContextMenu();
+const { handle: handleListContextMenu, isBatchOperate } = useContextMenu();
 const conversationsStore = useConversationsStore();
 
 async function handleItemContextMenu(item: Conversation) {
@@ -79,5 +109,7 @@ function updateTitle(id: number, title: string) {
                 <li v-else class="divider my-2 h-px bg-input"></li>
             </template>
         </ul>
+        <operation-bar v-show="isBatchOperate" @select-all="handleAllSelectChange" @cancel="isBatchOperate = false"
+            @op="handleBatchOperate" />
     </div>
 </template>
