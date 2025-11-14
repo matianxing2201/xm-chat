@@ -16,6 +16,7 @@ export function useWinManager() {
 
   onMounted(async () => {
     await nextTick();
+    window.api.viewIsReady(); // 发送 关闭loading
     isMaximized.value = await window.api.isWindowMaximized();
     window.api.onWindowMaximized(
       (_isMaximized: boolean) => (isMaximized.value = _isMaximized)

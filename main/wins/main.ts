@@ -14,13 +14,11 @@ import { logManager } from "../service/LogService";
 
 const registerMenus = (window: BrowserWindow) => {
   const conversationItemMenuItemClick = (id: string) => {
+    
     logManager.logUserOperation(
       `${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}-${id}`
     );
-    window.webContents.send(
-      `${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}`,
-      id
-    );
+    window.webContents.send(`${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}`, id);
   };
 
   menuManager.register(MENU_IDS.CONVERSATION_ITEM, [

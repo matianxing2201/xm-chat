@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 
 import { contextBridge, ipcRenderer } from "electron";
-import { IPC_EVENTS } from "@common/constants";
+import { IPC_EVENTS, WINDOW_NAMES } from "@common/constants";
 
 const api: WindowApi = {
   closeWindow: () => ipcRenderer.send(IPC_EVENTS.CLOSE_WINDOW),
@@ -31,6 +31,29 @@ const api: WindowApi = {
     ),
   removeContextMenuListener: (menuId: string) =>
     ipcRenderer.removeAllListeners(`${IPC_EVENTS.SHOW_CONTEXT_MENU}:${menuId}`),
+
+  viewIsReady: () => ipcRenderer.send(IPC_EVENTS.RENDERER_IS_READY),
+
+  createDialog: (params: CreateDialogProps) => new Promise(async (resolve) => {
+    const feedback = await ipcRenderer.invoke(`${IPC_EVENTS.OPEN_WINDOW}:${WINDOW_NAMES.DIALOG}`, {
+      title: params.title ?? '',
+      content: params.content,
+      confirmText: params.confirmText,
+      cancelText: params.cancelText,
+    });
+
+    if (feedback === 'confirm') params?.onConfirm?.();
+    if (feedback === 'cancel') params?.onCancel?.();
+
+    resolve(feedback);
+  }),
+
+  _dialogFeedback: (val: "cancel" | "confirm", winId: number) =>
+    ipcRenderer.send(WINDOW_NAMES.DIALOG + val, winId),
+  _dialogGetParams: () =>
+    ipcRenderer.invoke(
+      WINDOW_NAMES.DIALOG + "get-params"
+    ) as Promise<CreateDialogProps>,
 
   logger: {
     debug: (message: string, ...meta: any[]) =>

@@ -1,4 +1,5 @@
 import { setupMainWindow } from "./main";
+import { setupDialogWindow } from "./dialog";
 
 /**
  * 应用窗口初始化入口函数
@@ -10,4 +11,7 @@ import { setupMainWindow } from "./main";
 export function setupWindows() {
   // 初始化主窗口
   setupMainWindow();
+
+  // 初始化对话弹窗
+  setupDialogWindow();
 }

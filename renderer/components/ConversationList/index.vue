@@ -3,7 +3,7 @@ import { useFilter } from './useFilter';
 import { CTX_KEY } from './constants';
 import { Conversation } from '@common/types';
 import { CONVERSATION_ITEM_MENU_IDS, MENU_IDS } from '@common/constants';
-
+import { useDialog } from '../../hooks/useDialog';
 import { useContextMenu } from './useContextMenu';
 import { useConversationsStore } from '@renderer/store/conversations';
 import { createContextMenu } from '@renderer/utils/contextMenu';
@@ -13,10 +13,37 @@ import ListItem from './ListItem.vue';
 import OperationBar from './OperationBar.vue';
 
 
+defineOptions({ name: 'ConversationList' });
+
+const props = defineProps<{ width: number }>();
+const { conversations } = useFilter();
+const conversationsStore = useConversationsStore();
+
+const editId = ref<number | void>();
+const checkedIds = ref<number[]>([])
+
+const router = useRouter();
+const route = useRoute();
+
+const { createDialog } = useDialog();
+
+const { handle: handleListContextMenu, isBatchOperate } = useContextMenu();
+
+const currentId = computed(() => Number(route.params.id));
+
 
 const conversationItemActionPolicy = new Map([
-    [CONVERSATION_ITEM_MENU_IDS.DEL, (item: Conversation) => {
-        console.log('删除');
+    [CONVERSATION_ITEM_MENU_IDS.DEL, async (item: Conversation) => {
+        
+        const res = await createDialog({
+            title: 'main.conversation.dialog.title',
+            content: 'main.conversation.dialog.content',
+        })
+        
+        if (res === 'confirm') {
+            conversationsStore.delConversation(item.id);
+            item.id === currentId.value && router.push('/conversation');
+        }
     }],
     [CONVERSATION_ITEM_MENU_IDS.RENAME, (item: Conversation) => {
         editId.value = item.id;
@@ -32,7 +59,19 @@ const conversationItemActionPolicy = new Map([
 
 const batchActionPolicy = new Map([
     [CONVERSATION_ITEM_MENU_IDS.DEL, async () => {
-        // todo
+        const res = await createDialog({
+            title: 'main.conversation.dialog.title',
+            content: 'main.conversation.dialog.content_1',
+        })
+
+        if (res !== 'confirm') return
+
+        if (checkedIds.value.includes(currentId.value)) {
+            router.push('/conversation');
+        }
+
+        checkedIds.value.forEach(id => conversationsStore.delConversation(id));
+        isBatchOperate.value = false;
     }],
     [CONVERSATION_ITEM_MENU_IDS.PIN, async () => {
         // 🔓与🔒
@@ -46,11 +85,7 @@ const batchActionPolicy = new Map([
     }]
 ])
 
-defineOptions({ name: 'ConversationList' });
 
-const props = defineProps<{ width: number }>();
-const editId = ref<number | void>();
-const checkedIds = ref<number[]>([])
 
 
 function handleAllSelectChange(checked: boolean) {
@@ -71,12 +106,10 @@ provide(CTX_KEY, {
 
 
 
-const { conversations } = useFilter();
-const { handle: handleListContextMenu, isBatchOperate } = useContextMenu();
-const conversationsStore = useConversationsStore();
+
 
 async function handleItemContextMenu(item: Conversation) {
-    const clickItem = await createContextMenu(MENU_IDS.CONVERSATION_ITEM, void 0) as CONVERSATION_ITEM_MENU_IDS;
+    const clickItem = await createContextMenu(MENU_IDS.CONVERSATION_ITEM, void 0, item.pinned ? [{ label: 'menu.conversation.unpinConversation', id: CONVERSATION_ITEM_MENU_IDS.PIN }] : void 0) as CONVERSATION_ITEM_MENU_IDS;
     const action = conversationItemActionPolicy.get(clickItem);
     action && await action?.(item);
 }

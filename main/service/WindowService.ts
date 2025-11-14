@@ -1,9 +1,10 @@
 import type { WindowNames } from "@common/types";
 
-import { IPC_EVENTS } from "@common/constants";
+import { IPC_EVENTS, WINDOW_NAMES } from "@common/constants";
 import {
   BrowserWindow,
   BrowserWindowConstructorOptions,
+  WebContentsView,
   ipcMain,
   IpcMainInvokeEvent,
   type IpcMainEvent,
@@ -52,6 +53,8 @@ class WindowService {
 
   private _winStates: Record<WindowNames | string, WindowState> = {
     main: { instance: void 0, isHidden: false, onCreate: [], onClosed: [] },
+    setting: { instance: void 0, isHidden: false, onCreate: [], onClosed: [] },
+    dialog: { instance: void 0, isHidden: false, onCreate: [], onClosed: [] },
   };
 
   /**
@@ -64,6 +67,13 @@ class WindowService {
     logManager.info("windowsService 初始化成功");
   }
 
+  private _isReallyClose(windowName: WindowNames | void) {
+    if (windowName === WINDOW_NAMES.MAIN) return true;
+    if (windowName === WINDOW_NAMES.SETTING) return false;
+
+    return true;
+  }
+
   /**
    * 设置IPC事件监听器
    * 注册窗口控制相关事件处理函数，包括关闭、最小化、最大化等操作
@@ -71,7 +81,13 @@ class WindowService {
    */
   private _setupIpcEvents() {
     const handleCloseWindow = (e: IpcMainEvent) => {
-      this.close(BrowserWindow.fromWebContents(e.sender));
+      const target = BrowserWindow.fromWebContents(e.sender);
+
+      // 获取窗口名称
+      const winName = this.getName(target);
+
+      // 判断窗口真正关闭还是仅隐藏 并调用
+      this.close(target, this._isReallyClose(winName));
     };
     const handleMinimizeWindow = (e: IpcMainEvent) => {
       BrowserWindow.fromWebContents(e.sender)?.minimize();
@@ -110,18 +126,36 @@ class WindowService {
    * @param size - 窗口尺寸配置对象，包含宽度、高度等属性
    * @returns 创建的BrowserWindow实例
    */
-  public create(name: WindowNames, size: SizeOptions) {
-    const window = new BrowserWindow({
-      ...SHARED_WINDOW_OPTIONS,
-      ...size,
+  public create(
+    name: WindowNames,
+    size: SizeOptions,
+    moreOpts?: BrowserWindowConstructorOptions
+  ) {
+    if (this.get(name)) return;
+
+    const isHiddenWin = this._isHiddenWin(name);
+
+    let window = this._createWinInstance(name, { ...size, ...moreOpts });
+
+    !isHiddenWin &&
+      this._setupWinLifecycle(window, name)._loadWindowTemplate(window, name);
+
+    this._listenWinReady({
+      win: window,
+      isHiddenWin,
+      size,
     });
 
-    // 设置窗口生命周期事件并加载窗口模板
-    this._setupWinLifecycle(window, name)._loadWindowTemplate(window, name);
+    if (!isHiddenWin) {
+      this._winStates[name].instance = window;
+      this._winStates[name].onCreate.forEach((callback) => callback(window));
+    }
 
-    // 触发窗口加载事件
-    this._winStates[name].onCreate.forEach((callback) => callback(window));
-    window.webContents.openDevTools();
+    if (isHiddenWin) {
+      this._winStates[name].isHidden = false;
+      logManager.info(`Hidden window show: ${name}`);
+    }
+
     return window;
   }
 
@@ -155,6 +189,70 @@ class WindowService {
     return this;
   }
 
+  private _listenWinReady(params: {
+    win: BrowserWindow;
+    isHiddenWin: boolean;
+    size: SizeOptions;
+  }) {
+    const onReady = () => {
+      params.win?.once("show", () =>
+        setTimeout(() => this._applySizeConstraints(params.win, params.size), 2)
+      );
+
+      params.win?.show();
+    };
+
+    if (!params.isHiddenWin) {
+      const loadingHandler = this._addLoadingView(params.win, params.size);
+      loadingHandler?.(onReady);
+    } else {
+      onReady();
+    }
+  }
+
+  private _addLoadingView(window: BrowserWindow, size: SizeOptions) {
+    let loadingView: WebContentsView | void = new WebContentsView();
+    let rendererIsReady = false;
+
+    window.contentView?.addChildView(loadingView);
+    loadingView.setBounds({
+      x: 0,
+      y: 0,
+      width: size.width,
+      height: size.height,
+    });
+    loadingView.webContents.loadFile(path.join(__dirname, "loading.html"));
+
+    const onRendererIsReady = (e: IpcMainEvent) => {
+      if (e.sender !== window?.webContents || rendererIsReady) return;
+      rendererIsReady = true;
+      window.contentView.removeChildView(loadingView as WebContentsView);
+      ipcMain.removeListener(IPC_EVENTS.RENDERER_IS_READY, onRendererIsReady);
+      loadingView = void 0;
+    };
+
+    ipcMain.on(IPC_EVENTS.RENDERER_IS_READY, onRendererIsReady);
+
+    return (cb: () => void) =>
+      loadingView?.webContents.once("dom-ready", () => {
+        loadingView?.webContents.insertCSS(`body {
+          background-color: ${themeManage.isDark ? "#2C2C2C" : "#FFFFFF"} !important; 
+          --stop-color-start: ${themeManage.isDark ? "#A0A0A0" : "#7F7F7F"} !important;
+          --stop-color-end: ${themeManage.isDark ? "#A0A0A0" : "#7F7F7F"} !important;
+      }`);
+        cb();
+      });
+  }
+
+  private _applySizeConstraints(win: BrowserWindow, size: SizeOptions) {
+    if (size.maxHeight && size.maxWidth) {
+      win.setMaximumSize(size.maxWidth, size.maxHeight);
+    }
+    if (size.minHeight && size.minWidth) {
+      win.setMinimumSize(size.minWidth, size.minHeight);
+    }
+  }
+
   /**
    * 加载窗口模板内容
    * 根据运行环境（开发/生产）加载相应的页面内容
@@ -178,15 +276,64 @@ class WindowService {
     );
   }
 
+  private _handleCloseWindowState(target: BrowserWindow, really: Boolean) {
+    const name = this.getName(target) as WindowNames;
+
+    if (name) {
+      if (!really) this._winStates[name].isHidden = true;
+      else this._winStates[name].instance = void 0;
+    }
+
+    setTimeout(() => {
+      target[really ? "close" : "hide"]?.();
+      this._checkAndCloseAllWinodws();
+    }, 210);
+  }
+
+  private _checkAndCloseAllWinodws() {
+    if (
+      !this._winStates[WINDOW_NAMES.MAIN].instance ||
+      this._winStates[WINDOW_NAMES.MAIN].instance?.isDestroyed()
+    )
+      return Object.values(this._winStates).forEach((win) =>
+        win?.instance?.close()
+      );
+
+    const minimizeToTray = false; // todo : 从配置中读取
+    if (!minimizeToTray && !this.get(WINDOW_NAMES.MAIN)?.isVisible())
+      return Object.values(this._winStates).forEach(
+        (win) => !win?.instance?.isVisible() && win?.instance?.close()
+      );
+  }
+
+  private _isHiddenWin(name: WindowNames) {
+    return this._winStates[name] && this._winStates[name].isHidden;
+  }
+
+  private _createWinInstance(
+    name: WindowNames,
+    opts?: BrowserWindowConstructorOptions
+  ) {
+    return this._isHiddenWin(name)
+      ? (this._winStates[name].instance as BrowserWindow)
+      : new BrowserWindow({
+          ...SHARED_WINDOW_OPTIONS,
+          ...opts,
+        });
+  }
+
   /**
    * 关闭指定窗口
    * 安全地关闭窗口，会先检查窗口是否存在
    *
    * @param target - 要关闭的窗口实例
    */
-  public close(target: BrowserWindow | void | null) {
+  public close(target: BrowserWindow | void | null, really: Boolean = true) {
     if (!target) return;
-    target?.close();
+
+    const name = this.getName(target);
+    logManager.info(`Close window: ${name}, really: ${really}`);
+    this._handleCloseWindowState(target, really);
   }
 
   /**
@@ -198,6 +345,21 @@ class WindowService {
   public toggleMax(target: BrowserWindow | void | null) {
     if (!target) return;
     target.isMaximized() ? target.unmaximize() : target.maximize();
+  }
+
+  public getName(target: BrowserWindow | void | null): WindowNames | void {
+    if (!target) return;
+    for (const [name, win] of Object.entries(this._winStates) as [
+      WindowNames,
+      { instance: BrowserWindow | void } | void,
+    ][]) {
+      if (win?.instance === target) return name;
+    }
+  }
+
+  public get(name: WindowNames) {
+    if (this._winStates[name].isHidden) return void 0;
+    return this._winStates[name].instance;
   }
 
   public onWindowCreate(
