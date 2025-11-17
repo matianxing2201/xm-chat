@@ -34,12 +34,10 @@ const currentId = computed(() => Number(route.params.id));
 
 const conversationItemActionPolicy = new Map([
     [CONVERSATION_ITEM_MENU_IDS.DEL, async (item: Conversation) => {
-        
         const res = await createDialog({
             title: 'main.conversation.dialog.title',
             content: 'main.conversation.dialog.content',
         })
-        
         if (res === 'confirm') {
             conversationsStore.delConversation(item.id);
             item.id === currentId.value && router.push('/conversation');

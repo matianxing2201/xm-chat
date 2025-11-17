@@ -167,25 +167,18 @@ class WindowService {
    * @param _name - 窗口名称
    * @returns 当前WindowService实例，支持链式调用
    */
-  private _setupWinLifecycle(window: BrowserWindow, _name: WindowNames) {
-    const updateWinStatus = debounce(
-      () =>
-        !window?.isDestroyed() &&
-        window?.webContents?.send(
-          IPC_EVENTS.MAXIMIZE_WINDOW + "back",
-          window?.isMaximized()
-        ),
-      80
-    );
-    // 监听窗口关闭事件
-    window.once("closed", () => {
+  private _setupWinLifecycle(window: BrowserWindow, name: WindowNames) {
+    const updateWinStatus = debounce(() => !window?.isDestroyed()
+      && window?.webContents?.send(IPC_EVENTS.MAXIMIZE_WINDOW + 'back', window?.isMaximized()), 80);
+    window.once('closed', () => {
+      this._winStates[name].onClosed.forEach(callback => callback(window));
       window?.destroy();
-      window?.removeListener("resize", updateWinStatus);
-      logManager.info(`窗口: ${name} 关闭`);
+      window?.removeListener('resize', updateWinStatus);
+      this._winStates[name].instance = void 0;
+      this._winStates[name].isHidden = false;
+      logManager.info(`Window closed: ${name}`);
     });
-    // 监听窗口调整大小事件
-    window.on("resize", updateWinStatus);
-    // this._loadWindowTemplate(win, name);
+    window.on('resize', updateWinStatus)
     return this;
   }
 
