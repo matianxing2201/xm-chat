@@ -37,6 +37,9 @@ export const useConversationsStore = defineStore("conversations", () => {
   async function initialize() {
     conversations.value = await dataBase.conversations.toArray();
 
+    console.log(conversations.value);
+
+    // 清除无用的 message
     // 清除无用的 message
     const ids = conversations.value.map((item) => item.id);
     const msgs = await dataBase.messages.toArray();

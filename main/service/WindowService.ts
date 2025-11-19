@@ -137,6 +137,8 @@ class WindowService {
 
     let window = this._createWinInstance(name, { ...size, ...moreOpts });
 
+    // window.webContents.openDevTools();
+
     !isHiddenWin &&
       this._setupWinLifecycle(window, name)._loadWindowTemplate(window, name);
 
@@ -168,17 +170,24 @@ class WindowService {
    * @returns 当前WindowService实例，支持链式调用
    */
   private _setupWinLifecycle(window: BrowserWindow, name: WindowNames) {
-    const updateWinStatus = debounce(() => !window?.isDestroyed()
-      && window?.webContents?.send(IPC_EVENTS.MAXIMIZE_WINDOW + 'back', window?.isMaximized()), 80);
-    window.once('closed', () => {
-      this._winStates[name].onClosed.forEach(callback => callback(window));
+    const updateWinStatus = debounce(
+      () =>
+        !window?.isDestroyed() &&
+        window?.webContents?.send(
+          IPC_EVENTS.MAXIMIZE_WINDOW + "back",
+          window?.isMaximized()
+        ),
+      80
+    );
+    window.once("closed", () => {
+      this._winStates[name].onClosed.forEach((callback) => callback(window));
       window?.destroy();
-      window?.removeListener('resize', updateWinStatus);
+      window?.removeListener("resize", updateWinStatus);
       this._winStates[name].instance = void 0;
       this._winStates[name].isHidden = false;
       logManager.info(`Window closed: ${name}`);
     });
-    window.on('resize', updateWinStatus)
+    window.on("resize", updateWinStatus);
     return this;
   }
 
