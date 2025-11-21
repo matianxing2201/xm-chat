@@ -3,8 +3,11 @@ import type { SelectValue } from '@renderer/types';
 import { MAIN_WIN_SIZE } from '@common/constants';
 import { throttle } from '@common/utils';
 
+import { messages } from '@renderer/testData';
+
 import ResizeDivider from '@renderer/components/ResizeDivider.vue';
 import MessageInput from '@renderer/components/MessageInput.vue';
+import MessageList from '@renderer/components/ConversationList/MessageList.vue';
 import CreateConversation from '@renderer/components/CreateConversation.vue';
 
 const listHeight = ref(0);
@@ -40,7 +43,7 @@ function afterCreateConversation(id: number, _firstMsg: string) {
     // TODO: 第一条消息
     message.value = '';
 }
-
+// 监听窗口大小变化 动态更新列表高度
 window.onresize = throttle(async () => {
     if (window.innerHeight < MAIN_WIN_SIZE.minHeight) return;
     listHeight.value = window.innerHeight * listScale.value;
@@ -58,7 +61,6 @@ watch(() => listHeight.value, () => listScale.value = listHeight.value / window.
 
 </script>
 <template>
-    {{ conversationId }}
     <div class="h-full " v-if="!conversationId">
         <div class="h-full pt-[45vh] px-5">
             <div class="text-3xl font-bold text-primary-subtle text-center">
@@ -76,7 +78,7 @@ watch(() => listHeight.value, () => listScale.value = listHeight.value / window.
     </div>
     <div class="h-full flex flex-col" v-else>
         <div class="w-full min-h-0" :style="{ height: `${listHeight}px` }">
-            message-list
+            <message-list :messages="messages" />
         </div>
         <div class="input-container bg-bubble-others flex-auto w-[calc(100% + 10px)] ml-[-5px] ">
             <resize-divider direction="horizontal" v-model:size="listHeight" :max-size="maxListHeight"
