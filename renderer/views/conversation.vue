@@ -3,6 +3,8 @@ import type { SelectValue } from '@renderer/types';
 import { MAIN_WIN_SIZE } from '@common/constants';
 import { throttle } from '@common/utils';
 
+import { useMessageStore } from '@renderer/store/message';
+
 import { messages } from '@renderer/testData';
 
 import ResizeDivider from '@renderer/components/ResizeDivider.vue';
@@ -21,14 +23,14 @@ const msgInputRef = useTemplateRef<{ selectedProvider: SelectValue }>('msgInputR
 const route = useRoute();
 const router = useRouter();
 
+const messageStore = useMessageStore();
+
 
 const providerId = computed(() => ((provider.value as string)?.split(':')[0] ?? ''));
 const selectedModel = computed(() => ((provider.value as string)?.split(':')[1] ?? ''));
 
 const conversationId = computed(() => {
-    console.log(route.params.id);
     return route.params.id
-
 });
 
 async function handleCreateConversation(create: (title: string) => Promise<number | void>, _message: string) {
@@ -56,6 +58,12 @@ onMounted(async () => {
     await nextTick();
     listHeight.value = window.innerHeight * listScale.value;
 });
+
+onBeforeRouteUpdate(async (to, from, next) => {
+    if (to.params.id === from.params.id) return next()
+    await messageStore.initialize(Number(to.params.id));
+    next();
+})
 
 watch(() => listHeight.value, () => listScale.value = listHeight.value / window.innerHeight);
 

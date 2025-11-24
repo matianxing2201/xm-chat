@@ -68,7 +68,11 @@ export function simpleCloneDeep<T>(obj: T): T {
     return obj;
   }
 }
-
+/**
+ * 将OpenAI设置对象序列化为base64编码的字符串
+ * @param setting OpenAI设置对象，包含baseURL和apiKey等配置
+ * @returns base64编码后的设置字符串，如果序列化失败则返回空字符串
+ */
 export function stringifyOpenAISetting(setting: OpenAISetting) {
   try {
     return encode(JSON.stringify(setting));
@@ -76,4 +80,40 @@ export function stringifyOpenAISetting(setting: OpenAISetting) {
     console.error("stringifyOpenAISetting failed:", error);
     return "";
   }
+}
+
+/**
+ * 将base64编码的字符串解析为OpenAI设置对象
+ * @param setting base64编码的设置字符串
+ * @returns 解析后的OpenAI设置对象，如果解析失败则返回空对象
+ */
+export function parseOpenAISetting(setting: string): OpenAISetting {
+  try {
+    return JSON.parse(decode(setting));
+  } catch (error) {
+    console.error("parseOpenAISetting failed:", error);
+    return {} as OpenAISetting;
+  }
+}
+
+/**
+ * 根据指定键对数组进行去重
+ * @template T - 数组元素的类型，必须是对象类型
+ * @param arr 需要去重的数组
+ * @param key 用于判断重复的键名
+ * @returns 去重后的新数组，保留每个键值对应的第一个出现的元素
+ */
+export function uniqueByKey<T extends Record<string, any>>(
+  arr: T[],
+  key: keyof T
+): T[] {
+  const seen = new Map<any, boolean>();
+  return arr.filter((item) => {
+    const keyValue = item[key];
+    if (seen.has(keyValue)) {
+      return false;
+    }
+    seen.set(keyValue, true);
+    return true;
+  });
 }
