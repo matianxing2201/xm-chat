@@ -1,4 +1,5 @@
 import type { BrowserWindow } from "electron";
+import { ipcMain } from "electron";
 import {
   WINDOW_NAMES,
   MAIN_WIN_SIZE,
@@ -7,6 +8,7 @@ import {
   CONVERSATION_ITEM_MENU_IDS,
   CONVERSATION_LIST_MENU_IDS,
 } from "@common/constants";
+import { createProvider } from "../providers";
 
 import { windowManager } from "../service/WindowService";
 import { menuManager } from "../service/MenuService";
@@ -14,11 +16,13 @@ import { logManager } from "../service/LogService";
 
 const registerMenus = (window: BrowserWindow) => {
   const conversationItemMenuItemClick = (id: string) => {
-    
     logManager.logUserOperation(
       `${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}-${id}`
     );
-    window.webContents.send(`${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}`, id);
+    window.webContents.send(
+      `${IPC_EVENTS.SHOW_CONTEXT_MENU}:${MENU_IDS.CONVERSATION_ITEM}`,
+      id
+    );
   };
 
   menuManager.register(MENU_IDS.CONVERSATION_ITEM, [
@@ -151,8 +155,50 @@ export function setupMainWindow() {
     registerMenus(mainWindow);
   });
 
-  // 调用 WindowManager 服务创建主窗口
-  // 参数1: 窗口名称，用于标识窗口类型
-  // 参数2: 窗口尺寸配置，包含宽高和最小宽高等属性
   windowManager.create(WINDOW_NAMES.MAIN, MAIN_WIN_SIZE);
+
+  ipcMain.on(
+    IPC_EVENTS.START_A_DIALOGUE,
+    async (_event, props: CreateDialogueProps) => {
+      const { providerName, messages, messageId, selectedModel } = props;
+      const mainWindow = windowManager.get(WINDOW_NAMES.MAIN);
+
+      if (!mainWindow) {
+        throw new Error("Main window not found.");
+      }
+
+      try {
+        const provider = createProvider(providerName);
+        const chunks = await provider?.chat(messages, selectedModel);
+        if (!chunks) {
+          throw new Error("Provider chat method returned undefined.");
+        }
+
+        for await (const chunk of chunks) {
+          const chunkContent = {
+            messageId,
+            chunk,
+          };
+          mainWindow.webContents.send(
+            IPC_EVENTS.START_A_DIALOGUE + "back" + messageId,
+            chunkContent
+          );
+        }
+      } catch (error) {
+        const errorContent = {
+          messageId,
+          data: {
+            isEnd: true,
+            isError: true,
+            result: error instanceof Error ? error.message : String(error),
+          },
+        };
+
+        mainWindow.webContents.send(
+          IPC_EVENTS.START_A_DIALOGUE + "back" + messageId,
+          errorContent
+        );
+      }
+    }
+  );
 }

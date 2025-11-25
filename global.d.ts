@@ -11,6 +11,31 @@ interface CreateDialogProps {
   onCancel?: () => void;
 }
 
+type DialogueMessageRole = "user" | "assistant";
+
+interface DialogueMessageProps {
+  role: DialogueMessageRole;
+  content: string;
+}
+
+interface CreateDialogueProps {
+  messages: DialogueMessageProps[];
+  providerName: string;
+  selectedModel: string;
+  messageId: number;
+  conversationId: number;
+}
+
+interface UniversalChunk {
+  isEnd: boolean;
+  result: string;
+}
+
+interface DialogueBackStream {
+  messageId: number;
+  data: UniversalChunk & { isError?: boolean };
+}
+
 interface WindowApi {
   closeWindow: () => void;
   minimizeWindow: () => void;
@@ -30,7 +55,7 @@ interface WindowApi {
   viewIsReady: () => void;
 
   createDialog: (params: CreateDialogProps) => Promise<string>;
-  _dialogFeedback: (val: 'cancel' | 'confirm', winId: number) => void;
+  _dialogFeedback: (val: "cancel" | "confirm", winId: number) => void;
   _dialogGetParams: () => Promise<CreateDialogProps>;
 
   logger: {

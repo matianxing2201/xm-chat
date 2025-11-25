@@ -184,6 +184,27 @@ class LogService {
       `用户操作: ${operation} by ${userId}, 详情: ${JSON.stringify(details)}`
     );
   }
+
+  public logApiRequest(
+    endPoint: string,
+    data: any = {},
+    method: string = "POST"
+  ): void {
+    this.info(
+      `API请求: Method:${method} ${endPoint}, 数据: ${JSON.stringify(data)}`
+    );
+  }
+
+  public logApiResponse(
+    endPoint: string,
+    response: any = {},
+    statusCode: number = 200,
+    responseTime: number = 0
+  ): void {
+    this.info(
+      `API响应: ${endPoint}, 状态码: ${statusCode}, 响应时间: ${responseTime}ms, 数据: ${JSON.stringify(response)}`
+    );
+  }
 }
 
 export const logManager = LogService.getInstance();
