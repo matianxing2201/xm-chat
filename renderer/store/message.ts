@@ -1,20 +1,26 @@
 import type { Message, MessageStatus } from "@common/types";
 import { cloneDeep, uniqueByKey } from "@common/utils";
+import { listenDialogueBack } from "../utils/dialogue";
 import { defineStore } from "pinia";
 
 import { dataBase } from "../dataBase";
 
 import { useConversationsStore } from "./conversations";
+import { useProvidersStore } from "./providers";
+
+const msgContentMap = new Map<number, string>();
+export const stopMethods = new Map<number, () => void>();
 
 export const useMessageStore = defineStore("message", () => {
   const conversationsStore = useConversationsStore();
+  const providersStore = useProvidersStore();
 
   // State
   const messages = ref<Message[]>([]);
 
   // Getter
   const allMessages = computed(() => messages.value);
-  const messageByConversationId = computed(
+  const messagesByConversationId = computed(
     () => (conversationId: number) =>
       messages.value.filter((item) => item.conversationId === conversationId)
   );
@@ -61,7 +67,80 @@ export const useMessageStore = defineStore("message", () => {
   // 发送消息
   async function sendMessage(message: Omit<Message, "id" | "createdAt">) {
     await addMessage(message);
-    // TODO 调用大模型
+
+    const loadingMsgId = await addMessage({
+      conversationId: message.conversationId,
+      type: "answer",
+      content: "",
+      status: "loading",
+    });
+
+    const conversation = conversationsStore.getConversationById(
+      message.conversationId
+    );
+
+    if (!conversation) return loadingMsgId;
+
+    const provider = providersStore.allProviders.find(
+      (item) => item.id === conversation.providerId
+    );
+
+    if (!provider) return loadingMsgId;
+
+    msgContentMap.set(loadingMsgId, "");
+
+    let streamCallback:
+      | ((stream: DialogueBackStream) => Promise<void>)
+      | void = async (stream) => {
+      const { data, messageId } = stream;
+
+      const getStatus = (data: DialogueBackStream["data"]): MessageStatus => {
+        if (data.isError) return "error";
+        if (data.isEnd) return "success";
+        return "streaming";
+      };
+
+      msgContentMap.set(messageId, msgContentMap.get(messageId) + data.result);
+
+      const _update = {
+        content: msgContentMap.get(messageId) || "",
+        status: getStatus(data),
+        updatedAt: Date.now(),
+      } as Message;
+
+      await nextTick();
+      updateMessage(messageId, _update);
+      if (data.isEnd) {
+        console.log(msgContentMap.get(messageId));
+
+        msgContentMap.delete(messageId);
+        streamCallback = void 0;
+      }
+    };
+    stopMethods.set(
+      loadingMsgId,
+      listenDialogueBack(streamCallback, loadingMsgId)
+    );
+    const messages = messagesByConversationId
+      .value(message.conversationId)
+      .filter((item) => item.status !== "loading")
+      .map((item) => ({
+        role:
+          item.type === "question"
+            ? "user"
+            : ("assistant" as DialogueMessageRole),
+        content: item.content,
+      }));
+
+    await window.api.startADialogue({
+      messageId: loadingMsgId,
+      providerName: provider.name,
+      selectedModel: conversation.selectedModel,
+      conversationId: message.conversationId,
+      messages,
+    });
+
+    return loadingMsgId;
   }
 
   // 更新消息
@@ -91,7 +170,7 @@ export const useMessageStore = defineStore("message", () => {
   return {
     messages,
     allMessages,
-    messageByConversationId,
+    messagesByConversationId,
     initialize,
     addMessage,
     sendMessage,

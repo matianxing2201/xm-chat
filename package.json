@@ -4,7 +4,7 @@
   "description": "xm-chat 是一个功能完整的基于 Electron 开发的跨平台 AI 聊天软件项目。使用了 Vue 3、TypeScript、Electron、Vite 等技术。",
   "main": ".vite/build/index.js",
   "scripts": {
-    "start": "electron-forge start"
+    "start": "dotenv -e .env -- electron-forge start"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
   "dependencies": {
     "@vueuse/core": "^13.9.0",
     "dexie": "^4.2.1",
+    "dotenv-cli": "11.0.0",
     "electron-log": "^5.4.3",
     "electron-squirrel-startup": "^1.0.1",
     "js-base64": "^3.7.8",

@@ -159,25 +159,26 @@ export function setupMainWindow() {
 
   ipcMain.on(
     IPC_EVENTS.START_A_DIALOGUE,
-    async (_event, props: CreateDialogueProps) => {
+    async (_envent, props: CreateDialogueProps) => {
       const { providerName, messages, messageId, selectedModel } = props;
       const mainWindow = windowManager.get(WINDOW_NAMES.MAIN);
 
       if (!mainWindow) {
-        throw new Error("Main window not found.");
+        throw new Error("mainWindow not found");
       }
 
       try {
         const provider = createProvider(providerName);
         const chunks = await provider?.chat(messages, selectedModel);
+
         if (!chunks) {
-          throw new Error("Provider chat method returned undefined.");
+          throw new Error("chunks or stream not found");
         }
 
         for await (const chunk of chunks) {
           const chunkContent = {
             messageId,
-            chunk,
+            data: chunk,
           };
           mainWindow.webContents.send(
             IPC_EVENTS.START_A_DIALOGUE + "back" + messageId,

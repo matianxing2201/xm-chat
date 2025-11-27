@@ -7,7 +7,7 @@
   },
   "main": {
     "welcome": {
-      "helloMessage": "你好，我是小马"
+      "helloMessage": "你好，我是Pony"
     },
     "conversation": {
       "placeholder": "输入消息...",
@@ -138,6 +138,6 @@
     }
   },
   "app": {
-    "title": "迪奥娜"
+    "title": "Pony"
   }
 }

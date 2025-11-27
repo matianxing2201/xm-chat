@@ -9,13 +9,13 @@ function _transformChunk(
   const choice = chunk.choices[0];
   return {
     isEnd: choice?.finish_reason === "stop",
-    result: choice?.delta?.content || "",
+    result: choice?.delta?.content ?? "",
   };
 }
 
 export class OpenAIProvider extends BaseProvider {
   private client: OpenAI;
-  constructor(apiKey: string, baseURL?: string) {
+  constructor(apiKey: string, baseURL: string) {
     super();
     this.client = new OpenAI({ apiKey, baseURL });
   }
@@ -53,9 +53,7 @@ export class OpenAIProvider extends BaseProvider {
       // 记录API响应日志
       logManager.logApiResponse(
         "chat.completions.create",
-        {
-          success: true,
-        },
+        { success: true },
         200,
         responseTime
       );

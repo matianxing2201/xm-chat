@@ -34,19 +34,23 @@ const api: WindowApi = {
 
   viewIsReady: () => ipcRenderer.send(IPC_EVENTS.RENDERER_IS_READY),
 
-  createDialog: (params: CreateDialogProps) => new Promise(async (resolve) => {
-    const feedback = await ipcRenderer.invoke(`${IPC_EVENTS.OPEN_WINDOW}:${WINDOW_NAMES.DIALOG}`, {
-      title: params.title ?? '',
-      content: params.content,
-      confirmText: params.confirmText,
-      cancelText: params.cancelText,
-    });
+  createDialog: (params: CreateDialogProps) =>
+    new Promise(async (resolve) => {
+      const feedback = await ipcRenderer.invoke(
+        `${IPC_EVENTS.OPEN_WINDOW}:${WINDOW_NAMES.DIALOG}`,
+        {
+          title: params.title ?? "",
+          content: params.content,
+          confirmText: params.confirmText,
+          cancelText: params.cancelText,
+        }
+      );
 
-    if (feedback === 'confirm') params?.onConfirm?.();
-    if (feedback === 'cancel') params?.onCancel?.();
+      if (feedback === "confirm") params?.onConfirm?.();
+      if (feedback === "cancel") params?.onCancel?.();
 
-    resolve(feedback);
-  }),
+      resolve(feedback);
+    }),
 
   _dialogFeedback: (val: "cancel" | "confirm", winId: number) =>
     ipcRenderer.send(WINDOW_NAMES.DIALOG + val, winId),
@@ -54,6 +58,30 @@ const api: WindowApi = {
     ipcRenderer.invoke(
       WINDOW_NAMES.DIALOG + "get-params"
     ) as Promise<CreateDialogProps>,
+
+  startADialogue: (params: CreateDialogueProps) =>
+    ipcRenderer.send(IPC_EVENTS.START_A_DIALOGUE, params),
+
+  onDialogueBack: (
+    cb: (data: DialogueBackStream) => void,
+    messageId: number
+  ) => {
+    const callback = (
+      _event: Electron.IpcRendererEvent,
+      data: DialogueBackStream
+    ) => {
+      console.log(data);
+      cb(data);
+    };
+
+    ipcRenderer.on(IPC_EVENTS.START_A_DIALOGUE + "back" + messageId, callback);
+
+    return () =>
+      ipcRenderer.removeListener(
+        IPC_EVENTS.START_A_DIALOGUE + "back" + messageId,
+        callback
+      );
+  },
 
   logger: {
     debug: (message: string, ...meta: any[]) =>
