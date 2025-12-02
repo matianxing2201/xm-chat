@@ -7,6 +7,7 @@ import { dataBase } from "../dataBase";
 
 import { useConversationsStore } from "./conversations";
 import { useProvidersStore } from "./providers";
+import i18n from "../i18n";
 
 const msgContentMap = new Map<number, string>();
 export const stopMethods = new Map<number, () => void>();
@@ -18,11 +19,32 @@ export const useMessageStore = defineStore("message", () => {
   // State
   const messages = ref<Message[]>([]);
 
+  const messageInputValue = ref(new Map());
+
   // Getter
   const allMessages = computed(() => messages.value);
   const messagesByConversationId = computed(
     () => (conversationId: number) =>
       messages.value.filter((item) => item.conversationId === conversationId)
+  );
+  /**
+   * 根据会话ID获取对应会话的输入框内容
+   */
+  const messagesInputValueById = computed(
+    () => (conversationId: number) =>
+      messageInputValue.value.get(conversationId)
+  );
+
+  // 获取指定会话中所有处于加载状态的消息ID (状态为loading或streaming(流式传输中)的消息)
+  const loadingMsgIdsByConversationId = computed(
+    () => (conversationId: number) =>
+      messagesByConversationId
+        .value(conversationId)
+        .filter(
+          (message) =>
+            message.status === "loading" || message.status === "streaming"
+        )
+        .map((message) => message.id)
   );
 
   // Action
@@ -41,6 +63,10 @@ export const useMessageStore = defineStore("message", () => {
 
     // 合并已加载的消息和从数据库加载的消息，去重
     messages.value = uniqueByKey([...messages.value, ...saved], "id");
+  }
+
+  function setMessageInputValue(conversationId: number, value: string) {
+    messageInputValue.value.set(conversationId, value);
   }
 
   // 更新会话
@@ -143,6 +169,30 @@ export const useMessageStore = defineStore("message", () => {
     return loadingMsgId;
   }
 
+  /**
+   * 停止指定ID的消息生成（中断流式响应）
+   *
+   * @param id 要停止的消息ID
+   * @param update 是否更新消息状态和内容（默认为true）
+   */
+  async function stopMessage(id: number, update: boolean = true) {
+    const stopMethod = stopMethods.get(id);
+    stopMethod && stopMethod();
+
+    if (update) {
+      const msgContent =
+        messages.value.find((message) => message.id === id)?.content || "";
+      await updateMessage(id, {
+        status: "success",
+        updatedAt: Date.now(),
+        content: msgContent
+          ? msgContent + i18n.global.t("main.message.stoppedGeneration")
+          : void 0,
+      });
+    }
+    stopMethods.delete(id);
+  }
+
   // 更新消息
   async function updateMessage(id: number, updates: Partial<Message>) {
     let currentMsg = cloneDeep(
@@ -171,10 +221,14 @@ export const useMessageStore = defineStore("message", () => {
     messages,
     allMessages,
     messagesByConversationId,
+    messagesInputValueById,
+    loadingMsgIdsByConversationId,
+    setMessageInputValue,
     initialize,
     addMessage,
     sendMessage,
     updateMessage,
     deleteMessage,
+    stopMessage,
   };
 });
