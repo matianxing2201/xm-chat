@@ -10,7 +10,7 @@ import { useMessageStore } from '@renderer/store/message';
 
 import ResizeDivider from '@renderer/components/ResizeDivider.vue';
 import MessageInput from '@renderer/components/MessageInput.vue';
-import MessageList from '@renderer/components/ConversationList/MessageList.vue';
+import MessageList from '@renderer/components/MessageList.vue';
 import CreateConversation from '@renderer/components/CreateConversation.vue';
 
 import { useConversationsStore } from '@renderer/store/conversations';
