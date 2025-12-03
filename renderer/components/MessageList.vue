@@ -45,14 +45,70 @@ import { NScrollbar } from 'naive-ui'
 import { useBatchTimeAgo } from '@renderer/hooks/useTimeAgo'
 import MessageRender from './ConversationList/MessageRender.vue';
 
+const MESSAGE_LIST_CLASS_NAME = 'message-list';
+const SCROLLBAR_CONTENT_CLASS_NAME = 'n-scrollbar-content';
+
 defineOptions({
     name: 'MessageList'
 })
-defineProps<{
+const props = defineProps<{
     messages: Message[]
 }>()
 
+const route = useRoute();
+
 const { formatTimeAgo } = useBatchTimeAgo();
+
+/**
+ * 获取滚动容器DOM元素
+ * @returns 滚动容器DOM元素或undefined
+ */
+function _getScrollDOM() {
+    const msgListDOM = document.getElementsByClassName(MESSAGE_LIST_CLASS_NAME)[0];
+    if (!msgListDOM) return;
+    return msgListDOM.getElementsByClassName(SCROLLBAR_CONTENT_CLASS_NAME)[0];
+}
+
+/**
+ * 滚动到列表底部
+ * @param behavior 滚动行为，默认值为'smooth'
+ */
+async function scrollToBottom(behavior: ScrollIntoViewOptions['behavior'] = 'smooth') {
+    await nextTick();
+    const scrollDOM = _getScrollDOM();
+    if (!scrollDOM) return;
+    scrollDOM.scrollIntoView({
+        behavior,
+        block: 'end',
+    })
+}
+
+let currentHeight = 0;
+
+// 监听 模型切换 / 内容更新  滚动到底部
+watch([() => route.params.id, () => props.messages.length], () => {
+    scrollToBottom('instant');
+    currentHeight = 0
+})
+
+// 监听消息列表长度变化 滚动到底部 
+watch(() => props.messages[props.messages.length - 1], () => {
+    const scrollDOM = _getScrollDOM();
+    if (!scrollDOM) return;
+    const height = scrollDOM.scrollHeight;
+    if (height > currentHeight) {
+        currentHeight = height
+        scrollToBottom();
+    }
+}, {
+    immediate: true,
+    deep: true
+})
+
+
+onMounted(() => {
+    scrollToBottom('instant');
+})
 
 </script>
 <style scoped>
