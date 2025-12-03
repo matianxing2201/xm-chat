@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import VueMarkdown from 'vue-markdown-render';
+import markdownItHighlightjs from 'markdown-it-highlightjs';
+
 defineOptions({ name: 'MessageRender' });
 const props = defineProps<{
     msgId: number;
@@ -86,11 +88,17 @@ watch(() => props.isStreaming, async (newVal, oldVal) => {
 </script>
 <template>
     <template v-if="content?.trim()?.length">
-        <VueMarkdown :source="content" :id="renderId" />
+        <VueMarkdown class="prose dark:prose-invert prose-slate prose-pre:p-0 prose-headings:pt-3 text-inherit"
+            :source="content" :id="renderId" :plugins="[markdownItHighlightjs]" />
     </template>
     <span v-else class="_cursor">{{ t('main.message.rendering') }}</span>
 </template>
 
+<style scoped>
+.prose {
+    font-size: inherit;
+}
+</style>
 
 <style>
 ._cursor::after {

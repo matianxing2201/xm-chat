@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "./theme/index.css";
+@plugin '@tailwindcss/typography';
 
 * {
   user-select: none;
@@ -30,7 +31,6 @@ body {
 .drag-region {
   -webkit-app-region: drag;
 }
-
 
 .dialog-overlay {
   opacity: 0;
